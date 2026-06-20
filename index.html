@@ -1026,10 +1026,67 @@
             padding: 28px 20px;
             font-size: 0.85rem;
             border-top: 1px solid rgba(255, 255, 255, 0.04);
+            position: relative;
         }
 
         .footer strong {
             color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* ===== ADMIN LINK – hidden but accessible ===== */
+        .admin-link {
+            display: inline-block;
+            color: rgba(255, 255, 255, 0.15);
+            font-size: 0.6rem;
+            text-decoration: none;
+            transition: var(--transition);
+            margin-right: 8px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: transparent;
+        }
+
+        .admin-link:hover {
+            color: var(--expo-orange);
+            background: rgba(255, 255, 255, 0.05);
+            text-decoration: none;
+        }
+
+        .admin-link i {
+            font-size: 0.7rem;
+            margin-left: 4px;
+        }
+
+        /* Extra: a tiny gear icon in the corner – also hidden but clickable */
+        .admin-ghost {
+            position: fixed;
+            bottom: 12px;
+            left: 12px;
+            z-index: 9998;
+            color: rgba(255, 255, 255, 0.06);
+            font-size: 1.2rem;
+            transition: var(--transition);
+            cursor: pointer;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            border-radius: 30px;
+            background: transparent;
+        }
+
+        .admin-ghost:hover {
+            color: var(--expo-orange);
+            background: rgba(0, 0, 0, 0.05);
+            text-decoration: none;
+        }
+
+        .admin-ghost span {
+            font-size: 0.55rem;
+            opacity: 0.5;
+            font-weight: 700;
+            letter-spacing: 0.5px;
         }
 
         /* ============================================================
@@ -1126,6 +1183,15 @@
             .sponsor-logo img {
                 height: 34px;
                 max-width: 80px;
+            }
+
+            .admin-ghost {
+                bottom: 10px;
+                left: 10px;
+                font-size: 1rem;
+            }
+            .admin-ghost span {
+                display: none;
             }
         }
 
@@ -1245,6 +1311,13 @@
             .success-social {
                 margin-top: 20px;
                 padding-top: 16px;
+            }
+
+            .admin-link {
+                font-size: 0.5rem;
+            }
+            .admin-ghost span {
+                display: none;
             }
         }
 
@@ -1525,7 +1598,7 @@
                     </div>
                 </form>
 
-                <!-- ===== SUCCESS STATE (UPDATED WITH FACEBOOK) ===== -->
+                <!-- ===== SUCCESS STATE ===== -->
                 <div class="success-state" id="successState">
                     <div class="success-icon"><i class="fas fa-check-circle"></i></div>
                     <h2>تم تأكيد طلب التسجيل بنجاح</h2>
@@ -1570,7 +1643,13 @@
     ============================================================ -->
     <footer class="footer">
         <div class="container">
-            <p>© 2026 <strong>PHARAOHS · EXPO Edition 2</strong> — جميع الحقوق محفوظة</p>
+            <p>
+                © 2026 <strong>PHARAOHS · EXPO Edition 2</strong> — جميع الحقوق محفوظة
+                <!-- ===== ADMIN LINK – HIDDEN BUT CLICKABLE ===== -->
+                <a href="admin.html" class="admin-link" title="لوحة التحكم (للفريق فقط)">
+                    <i class="fas fa-cog"></i> Admin
+                </a>
+            </p>
             <p style="font-size:0.7rem; margin-top:4px; opacity:0.5;">برعاية الفراعنة للتطوير العقاري</p>
         </div>
     </footer>
@@ -1585,6 +1664,12 @@
        aria-label="تواصل عبر واتساب">
         <i class="fab fa-whatsapp"></i>
         <span class="whatsapp-tooltip">تواصل معنا عبر واتساب</span>
+    </a>
+
+    <!-- ===== ADMIN GHOST – tiny gear in bottom-left (extremely subtle) ===== -->
+    <a href="admin.html" class="admin-ghost" title="Admin Panel">
+        <i class="fas fa-cog"></i>
+        <span>admin</span>
     </a>
 
     <!-- ============================================================
@@ -1708,7 +1793,7 @@
                 return;
             }
 
-            // ===== جمع البيانات (لأغراض العرض فقط – بدون إرسال) =====
+            // ===== جمع البيانات =====
             const interests = [];
             document.querySelectorAll('.check-item input:checked').forEach(cb => {
                 interests.push(cb.value);
@@ -1731,11 +1816,19 @@
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التسجيل...';
 
-            // ===== محاكاة إرسال ناجح (بدون اتصال خارجي) =====
+            // ===== حفظ البيانات في localStorage =====
+            try {
+                let registrations = JSON.parse(localStorage.getItem('expo_registrations') || '[]');
+                registrations.push(formData);
+                localStorage.setItem('expo_registrations', JSON.stringify(registrations));
+            } catch (e) {
+                console.warn('Could not save to localStorage:', e);
+            }
+
+            // ===== محاكاة إرسال ناجح =====
             setTimeout(() => {
-                // ✅ نجاح دائم
                 showSuccess();
-                console.log('✅ تم التسجيل بنجاح (محاكاة):', formData);
+                console.log('✅ تم التسجيل بنجاح:', formData);
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> احجز مقعدي الآن';
             }, 1200);
@@ -1761,7 +1854,7 @@
             });
         });
 
-        console.log('✅ EXPO Registration Form ready (without Google Sheets)');
+        console.log('✅ EXPO Registration Form ready (with localStorage)');
     </script>
 
 </body>
