@@ -30,6 +30,8 @@
             --radius: 20px;
             --radius-sm: 12px;
             --transition: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            --whatsapp-green: #25D366;
+            --facebook-blue: #1877F2;
         }
 
         html {
@@ -113,6 +115,33 @@
             background: var(--expo-black);
             color: var(--expo-white);
             transform: translateY(-2px);
+        }
+
+        /* ===== SOCIAL BUTTON ===== */
+        .btn-facebook {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--facebook-blue);
+            color: var(--expo-white);
+            font-weight: 700;
+            font-size: 1rem;
+            padding: 14px 32px;
+            border: none;
+            border-radius: 60px;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 8px 25px rgba(24, 119, 242, 0.3);
+            font-family: 'Cairo', sans-serif;
+        }
+
+        .btn-facebook:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(24, 119, 242, 0.45);
+        }
+
+        .btn-facebook i {
+            font-size: 1.3rem;
         }
 
         /* ===== SECTION TITLES ===== */
@@ -701,7 +730,7 @@
             margin-right: 2px;
         }
 
-        .form-group .hint {
+        .form-group label .hint {
             font-size: 0.8rem;
             color: #8a8580;
             font-weight: 400;
@@ -859,6 +888,29 @@
             margin: 0 auto;
         }
 
+        .success-social {
+            margin-top: 28px;
+            padding-top: 20px;
+            border-top: 2px dashed #e8e0d6;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .success-social .social-label {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--expo-black-soft);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .success-social .social-label i {
+            color: var(--expo-orange);
+        }
+
         @keyframes popIn {
             0% {
                 transform: scale(0);
@@ -895,6 +947,73 @@
             font-size: 1.05rem;
             max-width: 440px;
             margin: 0 auto;
+        }
+
+        /* ============================================================
+                   FLOATING WHATSAPP BUTTON
+                   ============================================================ */
+        .whatsapp-float {
+            position: fixed;
+            bottom: 28px;
+            left: 28px;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--whatsapp-green);
+            color: white;
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            box-shadow: 0 8px 28px rgba(37, 211, 102, 0.35);
+            transition: var(--transition);
+            text-decoration: none;
+            font-size: 2.2rem;
+            border: none;
+            cursor: pointer;
+        }
+
+        .whatsapp-float:hover {
+            transform: scale(1.1) translateY(-4px);
+            box-shadow: 0 12px 40px rgba(37, 211, 102, 0.5);
+        }
+
+        .whatsapp-float:active {
+            transform: scale(0.95);
+        }
+
+        .whatsapp-float .whatsapp-tooltip {
+            position: absolute;
+            left: 80px;
+            background: var(--expo-black);
+            color: var(--expo-white);
+            padding: 6px 16px;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: var(--transition);
+            font-family: 'Cairo', sans-serif;
+            box-shadow: var(--shadow-soft);
+        }
+
+        .whatsapp-float:hover .whatsapp-tooltip {
+            opacity: 1;
+        }
+
+        @media (max-width: 640px) {
+            .whatsapp-float {
+                width: 56px;
+                height: 56px;
+                font-size: 1.8rem;
+                bottom: 20px;
+                left: 20px;
+            }
+            .whatsapp-float .whatsapp-tooltip {
+                display: none;
+            }
         }
 
         /* ============================================================
@@ -1115,6 +1234,18 @@
                 margin-top: 28px;
                 padding-top: 20px;
             }
+
+            .btn-facebook {
+                padding: 12px 24px;
+                font-size: 0.9rem;
+                width: 100%;
+                justify-content: center;
+            }
+
+            .success-social {
+                margin-top: 20px;
+                padding-top: 16px;
+            }
         }
 
         .text-center {
@@ -1322,19 +1453,25 @@
                         <input type="text" class="form-control" id="fullName" placeholder="أدخل اسمك الثلاثي" required />
                     </div>
 
-                    <!-- 2. Phone -->
+                    <!-- 2. Phone (Primary) -->
                     <div class="form-group">
-                        <label>رقم الهاتف <span class="required">*</span></label>
+                        <label>رقم الهاتف الأساسي <span class="required">*</span></label>
                         <input type="tel" class="form-control" id="phone" placeholder="مثال: 01012345678" required />
                     </div>
 
-                    <!-- 3. Email (optional) -->
+                    <!-- 3. Second Phone (WhatsApp – optional) -->
+                    <div class="form-group">
+                        <label>رقم هاتف إضافي (واتساب) <span class="hint">(اختياري)</span></label>
+                        <input type="tel" class="form-control" id="phone2" placeholder="مثال: 01098765432" />
+                    </div>
+
+                    <!-- 4. Email (optional) -->
                     <div class="form-group">
                         <label>البريد الإلكتروني <span class="hint">(اختياري)</span></label>
                         <input type="email" class="form-control" id="email" placeholder="example@email.com" />
                     </div>
 
-                    <!-- 4. Residence -->
+                    <!-- 5. Residence -->
                     <div class="form-group">
                         <label>محل الإقامة <span class="required">*</span></label>
                         <select class="form-control" id="residence" required>
@@ -1342,11 +1479,11 @@
                             <option value="أسوان">أسوان</option>
                             <option value="القاهرة">القاهرة</option>
                             <option value="دولة أخرى">الخليج</option>
-                            <option value="دولة أخرى">اخري</option>
+                            <option value="دولة أخرى">أخرى</option>
                         </select>
                     </div>
 
-                    <!-- 5. Interests (multi) -->
+                    <!-- 6. Interests (multi) -->
                     <div class="form-group">
                         <label>ما الذي يهمك أكثر داخل المعرض؟ <span class="hint">(اختيار متعدد)</span></label>
                         <div class="check-group">
@@ -1358,7 +1495,7 @@
                         </div>
                     </div>
 
-                    <!-- 6. Day -->
+                    <!-- 7. Day -->
                     <div class="form-group">
                         <label>اليوم الذي تنوي الحضور فيه</label>
                         <div class="radio-group">
@@ -1388,7 +1525,7 @@
                     </div>
                 </form>
 
-                <!-- SUCCESS STATE -->
+                <!-- ===== SUCCESS STATE (UPDATED WITH FACEBOOK) ===== -->
                 <div class="success-state" id="successState">
                     <div class="success-icon"><i class="fas fa-check-circle"></i></div>
                     <h2>تم تأكيد طلب التسجيل بنجاح</h2>
@@ -1396,7 +1533,21 @@
                     <p style="font-size:0.9rem; color:#7a7570; margin-top:12px;">
                         سيتم التواصل معك قبل موعد الحدث لتأكيد الحضور وإرسال تفاصيل الدخول.
                     </p>
-                    <button class="btn-primary" style="margin-top:20px; background:var(--expo-black); box-shadow:none;" onclick="resetForm()">
+
+                    <!-- === قسم المتابعة على فيسبوك === -->
+                    <div class="success-social">
+                        <span class="social-label">
+                            <i class="fas fa-thumbs-up"></i> تابعنا و اعرف كل جديد
+                        </span>
+                        <a href="https://www.facebook.com/alfranaa.realestate"
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           class="btn-facebook">
+                            <i class="fab fa-facebook-f"></i> تابعنا على فيسبوك
+                        </a>
+                    </div>
+
+                    <button class="btn-primary" style="margin-top:24px; background:var(--expo-black); box-shadow:none;" onclick="resetForm()">
                         <i class="fas fa-redo"></i> تسجيل جديد
                     </button>
                 </div>
@@ -1425,17 +1576,23 @@
     </footer>
 
     <!-- ============================================================
+    FLOATING WHATSAPP BUTTON
+    ============================================================ -->
+    <a href="https://wa.me/+201080071544?text=%D9%85%D9%85%D9%83%D9%86%20%D8%A7%D8%B9%D8%B1%D9%81%20%D8%AA%D9%81%D8%A7%D8%B5%D9%8A%D9%84%20%D8%A7%D9%83%D8%AA%D8%B1%20%D8%B9%D9%86%20%D8%A7%D9%84%D9%85%D8%B9%D8%B1%D8%B6...%D8%9F"
+       class="whatsapp-float"
+       target="_blank"
+       rel="noopener noreferrer"
+       aria-label="تواصل عبر واتساب">
+        <i class="fab fa-whatsapp"></i>
+        <span class="whatsapp-tooltip">تواصل معنا عبر واتساب</span>
+    </a>
+
+    <!-- ============================================================
     SCRIPTS
     ============================================================ -->
     <script>
         // ============================================================
-        // 1. GOOGLE SHEETS CONFIGURATION
-        // ============================================================
-        // ⚡ استبدل هذا الرابط بـ URL التطبيق الخاص بك بعد نشر Google Apps Script
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw11a4j1y7awLnssujgJcYqe2HT4pnbYOhM46KvikMSr7N-hfse_mh6S86JiGd3QN2V5A/exechttps://script.google.com/macros/s/AKfycbz_jocqpJafvoTdsP2LXKwgGO6tW6i7QtqdDjtiNdKmrvymC2LvoIN1Qn7KPc1WxOuJ/exec';
-
-        // ============================================================
-        // 2. COUNTDOWN TIMER
+        // 1. COUNTDOWN TIMER
         // ============================================================
         (function() {
             const target = new Date(2026, 6, 15, 0, 0, 0).getTime();
@@ -1461,7 +1618,7 @@
         })();
 
         // ============================================================
-        // 3. FORM HANDLING with Google Sheets
+        // 2. FORM HANDLING (NO Google Sheets – just frontend validation)
         // ============================================================
         const form = document.getElementById('registrationForm');
         const formWrapper = document.getElementById('formWrapper');
@@ -1516,49 +1673,8 @@
         window.resetForm = resetForm;
         window.hideError = hideError;
 
-        // ===== جمع بيانات النموذج =====
-        function getFormData() {
-            const interests = [];
-            document.querySelectorAll('.check-item input:checked').forEach(cb => {
-                interests.push(cb.value);
-            });
-            const day = document.querySelector('input[name="attendDay"]:checked');
-            const dayVal = day ? day.value : 'لم أقرر بعد';
-
-            return {
-                fullName: fullName.value.trim(),
-                phone: phone.value.trim(),
-                email: document.getElementById('email').value.trim(),
-                residence: residence.value,
-                interests: interests.join('، '),
-                day: dayVal,
-                timestamp: new Date().toLocaleString('ar-EG', { timeZone: 'Africa/Cairo' })
-            };
-        }
-
-        // ===== إرسال البيانات إلى Google Sheets =====
-        async function sendToGoogleSheets(data) {
-            try {
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    mode: 'no-cors', // مهم لتجنب مشاكل CORS
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(data)
-                });
-
-                // مع no-cors لا يمكن قراءة الـ response بشكل كامل
-                // لكن الـ request يصل إلى السيرفر
-                return { success: true };
-            } catch (error) {
-                console.error('❌ خطأ في الإرسال:', error);
-                return { success: false, error: error.message };
-            }
-        }
-
         // ===== معالجة تقديم النموذج =====
-        form.addEventListener('submit', async function(e) {
+        form.addEventListener('submit', function(e) {
             e.preventDefault();
 
             // ===== التحقق من صحة المدخلات =====
@@ -1592,27 +1708,37 @@
                 return;
             }
 
-            // ===== جمع البيانات =====
-            const formData = getFormData();
+            // ===== جمع البيانات (لأغراض العرض فقط – بدون إرسال) =====
+            const interests = [];
+            document.querySelectorAll('.check-item input:checked').forEach(cb => {
+                interests.push(cb.value);
+            });
+            const day = document.querySelector('input[name="attendDay"]:checked');
+            const dayVal = day ? day.value : 'لم أقرر بعد';
 
-            // ===== تعطيل الزر أثناء الإرسال =====
+            const formData = {
+                fullName: fullName.value.trim(),
+                phone: phone.value.trim(),
+                phone2: document.getElementById('phone2').value.trim(),
+                email: document.getElementById('email').value.trim(),
+                residence: residence.value,
+                interests: interests.join('، '),
+                day: dayVal,
+                timestamp: new Date().toLocaleString('ar-EG', { timeZone: 'Africa/Cairo' })
+            };
+
+            // ===== تعطيل الزر أثناء المعالجة =====
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التسجيل...';
 
-            // ===== إرسال البيانات =====
-            const result = await sendToGoogleSheets(formData);
-
-            if (result.success) {
-                // ✅ نجاح
+            // ===== محاكاة إرسال ناجح (بدون اتصال خارجي) =====
+            setTimeout(() => {
+                // ✅ نجاح دائم
                 showSuccess();
-                console.log('✅ تم التسجيل بنجاح:', formData);
-            } else {
-                // ❌ فشل
-                showError();
-                console.error('❌ فشل التسجيل:', result.error);
+                console.log('✅ تم التسجيل بنجاح (محاكاة):', formData);
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> احجز مقعدي الآن';
-            }
+            }, 1200);
         });
 
         // ===== تحسين واجهة المستخدم =====
@@ -1635,7 +1761,7 @@
             });
         });
 
-        console.log('✅ EXPO Registration Form ready!');
+        console.log('✅ EXPO Registration Form ready (without Google Sheets)');
     </script>
 
 </body>
