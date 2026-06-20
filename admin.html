@@ -2,16 +2,19 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/png" href="Asset 5.png">
-    <title>ADMIN · لوحة تحكم EXPO Edition 2</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
+    <title>Admin · لوحة تحكم EXPO</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
-    <!-- SheetJS لتصدير Excel -->
+    <!-- SheetJS for Excel export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <style>
+        /* ===== ADMIN DASHBOARD STYLES ===== */
         * {
             margin: 0;
             padding: 0;
@@ -20,19 +23,18 @@
 
         :root {
             --expo-orange: #FF6B1A;
-            --expo-orange-light: #FF7F38;
             --expo-orange-dark: #E85A0C;
             --expo-black: #0F0F10;
             --expo-black-soft: #1A1A1C;
             --expo-white: #FFFFFF;
             --expo-gray: #71717A;
             --expo-gray-light: #E8E0D6;
-            --shadow: 0 20px 60px rgba(0, 0, 0, .15);
             --shadow-soft: 0 8px 30px rgba(0, 0, 0, 0.08);
             --radius: 16px;
             --radius-sm: 10px;
             --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            --whatsapp-green: #25D366;
+            --danger: #dc2626;
+            --danger-hover: #b91c1c;
         }
 
         body {
@@ -43,7 +45,6 @@
             min-height: 100vh;
         }
 
-        /* ===== CONTAINER ===== */
         .container {
             max-width: 1300px;
             margin: 0 auto;
@@ -66,7 +67,7 @@
             border-radius: var(--radius);
             max-width: 420px;
             width: 100%;
-            box-shadow: var(--shadow);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, .15);
             border: 2px solid var(--expo-orange);
         }
 
@@ -155,15 +156,12 @@
             display: block;
         }
 
-        /* ============================================================
-           DASHBOARD
-           ============================================================ */
+        /* ===== DASHBOARD ===== */
         .dashboard {
             display: none;
             padding: 30px 0 60px;
         }
 
-        /* ===== HEADER ===== */
         .dash-header {
             display: flex;
             justify-content: space-between;
@@ -218,8 +216,25 @@
             box-shadow: 0 8px 25px rgba(255, 107, 26, 0.35);
         }
 
-        .btn-export i {
-            font-size: 1.1rem;
+        .btn-danger {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 0.95rem;
+            font-weight: 700;
+            font-family: 'Cairo', sans-serif;
+            cursor: pointer;
+            transition: var(--transition);
+            background: var(--danger);
+            color: var(--expo-white);
+        }
+
+        .btn-danger:hover {
+            background: var(--danger-hover);
+            transform: translateY(-2px);
         }
 
         .btn-logout {
@@ -257,6 +272,7 @@
             border-radius: var(--radius);
             box-shadow: var(--shadow-soft);
             border-right: 4px solid var(--expo-orange);
+            position: relative;
         }
 
         .stat-card .number {
@@ -272,7 +288,9 @@
         }
 
         .stat-card .icon {
-            float: left;
+            position: absolute;
+            left: 20px;
+            top: 20px;
             font-size: 2rem;
             color: var(--expo-orange);
             opacity: 0.3;
@@ -291,7 +309,7 @@
             width: 100%;
             border-collapse: collapse;
             font-size: 0.9rem;
-            min-width: 700px;
+            min-width: 750px;
         }
 
         .table-wrapper thead {
@@ -347,7 +365,28 @@
             color: var(--expo-gray);
         }
 
-        /* ===== Back to Main ===== */
+        /* ===== DELETE BUTTON ===== */
+        .btn-delete-row {
+            background: none;
+            border: none;
+            color: var(--danger);
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 4px 8px;
+            border-radius: 6px;
+            transition: var(--transition);
+        }
+
+        .btn-delete-row:hover {
+            background: #fee2e2;
+            transform: scale(1.1);
+        }
+
+        .btn-delete-row i {
+            pointer-events: none;
+        }
+
+        /* ===== Back to main ===== */
         .back-link {
             display: inline-flex;
             align-items: center;
@@ -364,117 +403,7 @@
             transform: translateX(-4px);
         }
 
-        /* ============================================================
-           FLOATING WHATSAPP
-           ============================================================ */
-        .whatsapp-float {
-            position: fixed;
-            bottom: 28px;
-            left: 28px;
-            z-index: 9999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: var(--whatsapp-green);
-            color: white;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            box-shadow: 0 8px 28px rgba(37, 211, 102, 0.35);
-            transition: var(--transition);
-            text-decoration: none;
-            font-size: 2rem;
-            border: none;
-            cursor: pointer;
-        }
-
-        .whatsapp-float:hover {
-            transform: scale(1.1) translateY(-4px);
-            box-shadow: 0 12px 40px rgba(37, 211, 102, 0.5);
-        }
-
-        .whatsapp-float .tooltip {
-            position: absolute;
-            left: 76px;
-            background: var(--expo-black);
-            color: var(--expo-white);
-            padding: 6px 16px;
-            border-radius: 30px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            white-space: nowrap;
-            opacity: 0;
-            pointer-events: none;
-            transition: var(--transition);
-            font-family: 'Cairo', sans-serif;
-        }
-
-        .whatsapp-float:hover .tooltip {
-            opacity: 1;
-        }
-
-        @media (max-width: 640px) {
-            .whatsapp-float {
-                width: 52px;
-                height: 52px;
-                font-size: 1.6rem;
-                bottom: 20px;
-                left: 20px;
-            }
-            .whatsapp-float .tooltip {
-                display: none;
-            }
-        }
-
-        /* ============================================================
-           RESPONSIVE
-           ============================================================ */
-        @media (max-width: 768px) {
-            .dash-header {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .dash-header .actions {
-                flex-direction: column;
-            }
-
-            .btn-export,
-            .btn-logout {
-                width: 100%;
-                justify-content: center;
-            }
-
-            .stats-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-
-            .login-box {
-                padding: 32px 24px;
-            }
-
-            .table-wrapper th,
-            .table-wrapper td {
-                padding: 10px 12px;
-                font-size: 0.8rem;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .login-box .logo h1 {
-                font-size: 1.4rem;
-            }
-
-            .dash-header .title h1 {
-                font-size: 1.4rem;
-            }
-        }
-
-        /* ===== TOAST NOTIFICATION ===== */
+        /* ===== TOAST ===== */
         .toast {
             position: fixed;
             top: 24px;
@@ -486,7 +415,7 @@
             border-radius: var(--radius-sm);
             font-weight: 700;
             font-size: 0.95rem;
-            box-shadow: var(--shadow);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
             z-index: 99999;
             display: none;
             animation: slideDown 0.4s ease;
@@ -501,6 +430,10 @@
             border-right: 4px solid #dc2626;
         }
 
+        .toast.warning {
+            border-right: 4px solid #f59e0b;
+        }
+
         @keyframes slideDown {
             from {
                 opacity: 0;
@@ -511,41 +444,104 @@
                 transform: translateX(-50%) translateY(0);
             }
         }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .dash-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .dash-header .actions {
+                flex-direction: column;
+            }
+            .btn-export,
+            .btn-danger,
+            .btn-logout {
+                width: 100%;
+                justify-content: center;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            .login-box {
+                padding: 32px 24px;
+            }
+            .table-wrapper th,
+            .table-wrapper td {
+                padding: 10px 12px;
+                font-size: 0.8rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            .login-box .logo h1 {
+                font-size: 1.4rem;
+            }
+            .dash-header .title h1 {
+                font-size: 1.4rem;
+            }
+        }
+
+        /* ===== ADMIN GHOST (optional tiny gear) ===== */
+        .admin-ghost {
+            position: fixed;
+            bottom: 12px;
+            left: 12px;
+            z-index: 9998;
+            color: rgba(255, 255, 255, 0.06);
+            font-size: 1.2rem;
+            transition: var(--transition);
+            cursor: pointer;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            border-radius: 30px;
+            background: transparent;
+        }
+        .admin-ghost:hover {
+            color: var(--expo-orange);
+            background: rgba(0, 0, 0, 0.05);
+        }
+        .admin-ghost span {
+            font-size: 0.55rem;
+            opacity: 0.5;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        @media (max-width: 768px) {
+            .admin-ghost span {
+                display: none;
+            }
+        }
     </style>
 </head>
 <body>
 
-    <!-- ============================================================
-    TOAST NOTIFICATION
-    ============================================================ -->
+    <!-- ===== TOAST ===== -->
     <div class="toast" id="toast"></div>
 
-    <!-- ============================================================
-    LOGIN SCREEN
-    ============================================================ -->
+    <!-- ===== LOGIN SCREEN ===== -->
     <div class="login-screen" id="loginScreen">
         <div class="login-box">
             <div class="logo">
                 <h1>PHARAOHS <span>ADMIN</span></h1>
                 <p>لوحة تحكم EXPO Edition 2</p>
             </div>
-
             <div class="form-group">
                 <label for="adminPassword">كلمة المرور</label>
                 <input type="password" id="adminPassword" class="form-control" placeholder="أدخل كلمة المرور" />
             </div>
-
-            <button class="btn" id="loginBtn">
-                <i class="fas fa-lock"></i> دخول
-            </button>
-
+            <button class="btn" id="loginBtn"><i class="fas fa-lock"></i> دخول</button>
             <div class="error-msg" id="loginError">كلمة المرور غير صحيحة. حاول مرة أخرى.</div>
         </div>
     </div>
 
-    <!-- ============================================================
-    DASHBOARD
-    ============================================================ -->
+    <!-- ===== DASHBOARD ===== -->
     <div class="dashboard" id="dashboard">
         <div class="container">
 
@@ -558,6 +554,9 @@
                 <div class="actions">
                     <button class="btn-export" id="exportExcelBtn">
                         <i class="fas fa-file-excel"></i> تحميل Excel
+                    </button>
+                    <button class="btn-danger" id="deleteAllBtn">
+                        <i class="fas fa-trash-alt"></i> مسح الكل
                     </button>
                     <button class="btn-logout" id="logoutBtn">
                         <i class="fas fa-sign-out-alt"></i> خروج
@@ -594,7 +593,7 @@
                 <table>
                     <thead>
                         <tr>
-                            <th>#</th>
+                            <th style="width:50px;">#</th>
                             <th>الاسم</th>
                             <th>الهاتف الأساسي</th>
                             <th>واتساب</th>
@@ -603,10 +602,13 @@
                             <th>الاهتمامات</th>
                             <th>يوم الحضور</th>
                             <th>تاريخ التسجيل</th>
+                            <th style="width:60px;">حذف</th>
                         </tr>
                     </thead>
                     <tbody id="tableBody">
-                        <!-- سيتم ملئها بواسطة JavaScript -->
+                        <tr class="empty-row">
+                            <td colspan="10"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -618,288 +620,286 @@
         </div>
     </div>
 
-    <!-- ============================================================
-    FLOATING WHATSAPP
-    ============================================================ -->
-    <a href="https://wa.me/+201080071544?text=%D9%85%D9%85%D9%83%D9%86%20%D8%A7%D8%B9%D8%B1%D9%81%20%D8%AA%D9%81%D8%A7%D8%B5%D9%8A%D9%84%20%D8%A7%D9%83%D8%AA%D8%B1%20%D8%B9%D9%86%20%D8%A7%D9%84%D9%85%D8%B9%D8%B1%D8%B6...%D8%9F"
-       class="whatsapp-float"
-       target="_blank"
-       rel="noopener noreferrer"
-       aria-label="تواصل عبر واتساب">
-        <i class="fab fa-whatsapp"></i>
-        <span class="tooltip">تواصل معنا</span>
+    <!-- ===== ADMIN GHOST (optional tiny gear, just for fun) ===== -->
+    <a href="admin.html" class="admin-ghost" title="Admin Panel">
+        <i class="fas fa-cog"></i>
+        <span>admin</span>
     </a>
 
-    <!-- ============================================================
-    SCRIPTS
-    ============================================================ -->
     <script>
-        (function() {
-            'use strict';
+        // ============================================================
+        // 0. FIREBASE CONFIG
+        // ============================================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyD3F5eRgetzkp8rzsFrwyDZZJsNuxQxqeE",
+            authDomain: "pharaohs-expo-registration.firebaseapp.com",
+            projectId: "pharaohs-expo-registration",
+            storageBucket: "pharaohs-expo-registration.firebasestorage.app",
+            messagingSenderId: "821875473528",
+            appId: "1:821875473528:web:1a065f810386f6448ac18d"
+        };
 
-            // ============================================================
-            // 1. CONFIG
-            // ============================================================
-            const ADMIN_PASSWORD = 'admin123'; // ⚡ يمكنك تغيير كلمة المرور هنا
-            const STORAGE_KEY = 'expo_registrations';
+        // ===== تهيئة Firebase =====
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
 
-            // ============================================================
-            // 2. DOM REFS
-            // ============================================================
-            const loginScreen = document.getElementById('loginScreen');
-            const dashboard = document.getElementById('dashboard');
-            const loginBtn = document.getElementById('loginBtn');
-            const loginPassword = document.getElementById('adminPassword');
-            const loginError = document.getElementById('loginError');
-            const logoutBtn = document.getElementById('logoutBtn');
-            const tableBody = document.getElementById('tableBody');
-            const exportBtn = document.getElementById('exportExcelBtn');
-            const toast = document.getElementById('toast');
+        // ============================================================
+        // 1. CONFIG & GLOBALS
+        // ============================================================
+        const ADMIN_PASSWORD = 'admin123'; // يمكنك تغييرها
+        const STORAGE_KEY = 'admin_logged_in';
 
-            // Stats
-            const totalCount = document.getElementById('totalCount');
-            const day16Count = document.getElementById('day16Count');
-            const day17Count = document.getElementById('day17Count');
-            const undecidedCount = document.getElementById('undecidedCount');
+        let currentData = [];
+        let unsubscribe = null;
 
-            // ============================================================
-            // 3. TOAST
-            // ============================================================
-            function showToast(message, type = 'success') {
-                toast.textContent = message;
-                toast.className = `toast ${type}`;
-                toast.style.display = 'block';
-                clearTimeout(toast._hideTimer);
-                toast._hideTimer = setTimeout(() => {
-                    toast.style.display = 'none';
-                }, 3500);
+        // ============================================================
+        // 2. DOM REFS
+        // ============================================================
+        const loginScreen = document.getElementById('loginScreen');
+        const dashboard = document.getElementById('dashboard');
+        const loginBtn = document.getElementById('loginBtn');
+        const loginPassword = document.getElementById('adminPassword');
+        const loginError = document.getElementById('loginError');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const tableBody = document.getElementById('tableBody');
+        const exportBtn = document.getElementById('exportExcelBtn');
+        const deleteAllBtn = document.getElementById('deleteAllBtn');
+        const toast = document.getElementById('toast');
+
+        const totalCount = document.getElementById('totalCount');
+        const day16Count = document.getElementById('day16Count');
+        const day17Count = document.getElementById('day17Count');
+        const undecidedCount = document.getElementById('undecidedCount');
+
+        // ============================================================
+        // 3. TOAST
+        // ============================================================
+        function showToast(message, type = 'success') {
+            toast.textContent = message;
+            toast.className = `toast ${type}`;
+            toast.style.display = 'block';
+            clearTimeout(toast._hideTimer);
+            toast._hideTimer = setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3500);
+        }
+
+        // ============================================================
+        // 4. DELETE FUNCTIONS
+        // ============================================================
+        async function deleteDocument(docId) {
+            if (!confirm('⚠️ هل أنت متأكد من حذف هذا السجل؟')) return;
+
+            try {
+                await db.collection('registrations').doc(docId).delete();
+                showToast('✅ تم حذف السجل بنجاح', 'success');
+            } catch (error) {
+                console.error('❌ خطأ في الحذف:', error);
+                showToast('❌ حدث خطأ أثناء الحذف', 'error');
+            }
+        }
+
+        async function deleteAllDocuments() {
+            if (currentData.length === 0) {
+                showToast('⚠️ لا توجد بيانات لحذفها', 'warning');
+                return;
             }
 
-            // ============================================================
-            // 4. DATA MANAGEMENT
-            // ============================================================
-            function getRegistrations() {
-                try {
-                    const data = localStorage.getItem(STORAGE_KEY);
-                    return data ? JSON.parse(data) : [];
-                } catch {
-                    return [];
-                }
+            if (!confirm(`⚠️ هل أنت متأكد من حذف جميع السجلات (${currentData.length} سجل)؟ هذا الإجراء لا يمكن التراجع عنه!`)) return;
+
+            try {
+                const batch = db.batch();
+                currentData.forEach((doc) => {
+                    const docRef = db.collection('registrations').doc(doc.id);
+                    batch.delete(docRef);
+                });
+                await batch.commit();
+                showToast(`✅ تم حذف ${currentData.length} سجل بنجاح`, 'success');
+            } catch (error) {
+                console.error('❌ خطأ في حذف الكل:', error);
+                showToast('❌ حدث خطأ أثناء حذف البيانات', 'error');
+            }
+        }
+
+        // ============================================================
+        // 5. RENDER DASHBOARD
+        // ============================================================
+        function renderDashboard() {
+            if (unsubscribe) {
+                unsubscribe();
             }
 
-            function saveRegistrations(data) {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+            unsubscribe = db.collection('registrations')
+                .orderBy('timestamp', 'desc')
+                .onSnapshot((snapshot) => {
+                    const registrations = [];
+                    snapshot.forEach((doc) => {
+                        registrations.push({ id: doc.id, ...doc.data() });
+                    });
+                    currentData = registrations;
+                    displayData(registrations);
+                }, (error) => {
+                    console.error('❌ خطأ في الاستماع:', error);
+                    tableBody.innerHTML = `<tr class="empty-row"><td colspan="10">⚠️ حدث خطأ في تحميل البيانات</td></tr>`;
+                });
+        }
+
+        function displayData(registrations) {
+            // إحصائيات
+            const total = registrations.length;
+            const day16 = registrations.filter(r => r.day === '16 يوليو').length;
+            const day17 = registrations.filter(r => r.day === '17 يوليو').length;
+            const undecided = registrations.filter(r => r.day === 'لم أقرر بعد' || !r.day).length;
+
+            totalCount.textContent = total;
+            day16Count.textContent = day16;
+            day17Count.textContent = day17;
+            undecidedCount.textContent = undecided;
+
+            // جدول
+            if (registrations.length === 0) {
+                tableBody.innerHTML = `
+                    <tr class="empty-row">
+                        <td colspan="10">
+                            <i class="fas fa-inbox"></i>
+                            لا يوجد عملاء مسجلين حتى الآن
+                        </td>
+                    </tr>
+                `;
+                return;
             }
 
-            // ============================================================
-            // 5. RENDER TABLE
-            // ============================================================
-            function renderDashboard() {
-                const registrations = getRegistrations();
+            const sorted = registrations;
 
-                // Stats
-                const total = registrations.length;
-                const day16 = registrations.filter(r => r.day === '16 يوليو').length;
-                const day17 = registrations.filter(r => r.day === '17 يوليو').length;
-                const undecided = registrations.filter(r => r.day === 'لم أقرر بعد' || !r.day).length;
+            tableBody.innerHTML = sorted.map((r, index) => {
+                const dayBadge = r.day === 'لم أقرر بعد' || !r.day ?
+                    `<span class="badge-day undecided">${r.day || 'لم يقرر'}</span>` :
+                    `<span class="badge-day">${r.day}</span>`;
 
-                totalCount.textContent = total;
-                day16Count.textContent = day16;
-                day17Count.textContent = day17;
-                undecidedCount.textContent = undecided;
+                const interests = r.interests || '-';
+                const email = r.email || '-';
+                const phone2 = r.phone2 || '-';
 
-                // Table
-                if (registrations.length === 0) {
-                    tableBody.innerHTML = `
-                        <tr class="empty-row">
-                            <td colspan="9">
-                                <i class="fas fa-inbox"></i>
-                                لا يوجد عملاء مسجلين حتى الآن
-                            </td>
-                        </tr>
-                    `;
-                    return;
-                }
+                return `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td><strong>${r.fullName || 'غير معروف'}</strong></td>
+                        <td>${r.phone || '-'}</td>
+                        <td>${phone2}</td>
+                        <td>${email}</td>
+                        <td>${r.residence || '-'}</td>
+                        <td style="font-size:0.8rem; max-width:150px;">${interests}</td>
+                        <td>${dayBadge}</td>
+                        <td style="font-size:0.8rem;">${r.timestamp || '-'}</td>
+                        <td>
+                            <button class="btn-delete-row" data-id="${r.id}" title="حذف السجل">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
 
-                // عرض من الأحدث إلى الأقدم
-                const sorted = [...registrations].reverse();
-
-                tableBody.innerHTML = sorted.map((r, index) => {
-                    const dayBadge = r.day === 'لم أقرر بعد' || !r.day ?
-                        `<span class="badge-day undecided">${r.day || 'لم يقرر'}</span>` :
-                        `<span class="badge-day">${r.day}</span>`;
-
-                    const interests = r.interests || '-';
-                    const email = r.email || '-';
-                    const phone2 = r.phone2 || '-';
-
-                    return `
-                        <tr>
-                            <td>${index + 1}</td>
-                            <td><strong>${r.fullName || 'غير معروف'}</strong></td>
-                            <td>${r.phone || '-'}</td>
-                            <td>${phone2}</td>
-                            <td>${email}</td>
-                            <td>${r.residence || '-'}</td>
-                            <td style="font-size:0.8rem; max-width:150px;">${interests}</td>
-                            <td>${dayBadge}</td>
-                            <td style="font-size:0.8rem;">${r.timestamp || '-'}</td>
-                        </tr>
-                    `;
-                }).join('');
-            }
-
-            // ============================================================
-            // 6. EXPORT EXCEL
-            // ============================================================
-            function exportExcel() {
-                const registrations = getRegistrations();
-
-                if (registrations.length === 0) {
-                    showToast('❌ لا توجد بيانات لتصديرها', 'error');
-                    return;
-                }
-
-                try {
-                    // تحضير البيانات للتصدير
-                    const data = registrations.map((r, index) => ({
-                        '#': index + 1,
-                        'الاسم بالكامل': r.fullName || '',
-                        'الهاتف الأساسي': r.phone || '',
-                        'واتساب': r.phone2 || '',
-                        'البريد الإلكتروني': r.email || '',
-                        'محل الإقامة': r.residence || '',
-                        'الاهتمامات': r.interests || '',
-                        'يوم الحضور': r.day || 'لم يقرر',
-                        'تاريخ التسجيل': r.timestamp || '',
-                    }));
-
-                    // إنشاء مصنف Excel
-                    const wb = XLSX.utils.book_new();
-                    const ws = XLSX.utils.json_to_sheet(data);
-
-                    // ضبط عرض الأعمدة
-                    ws['!cols'] = [
-                        { wch: 6 },
-                        { wch: 22 },
-                        { wch: 18 },
-                        { wch: 18 },
-                        { wch: 28 },
-                        { wch: 18 },
-                        { wch: 35 },
-                        { wch: 16 },
-                        { wch: 24 },
-                    ];
-
-                    XLSX.utils.book_append_sheet(wb, ws, 'المسجلين');
-                    const fileName = `EXPO_Registrations_${new Date().toLocaleDateString('ar-EG')}.xlsx`;
-                    XLSX.writeFile(wb, fileName);
-
-                    showToast(`✅ تم تحميل ${registrations.length} سجل بنجاح`, 'success');
-                } catch (err) {
-                    console.error(err);
-                    showToast('❌ حدث خطأ أثناء تصدير البيانات', 'error');
-                }
-            }
-
-            // ============================================================
-            // 7. AUTHENTICATION
-            // ============================================================
-            function login() {
-                const password = loginPassword.value.trim();
-                if (password === ADMIN_PASSWORD) {
-                    loginError.classList.remove('show');
-                    loginScreen.style.display = 'none';
-                    dashboard.style.display = 'block';
-                    renderDashboard();
-                    showToast('✅ مرحباً بك في لوحة التحكم', 'success');
-                } else {
-                    loginError.classList.add('show');
-                    loginPassword.value = '';
-                    loginPassword.focus();
-                }
-            }
-
-            function logout() {
-                dashboard.style.display = 'none';
-                loginScreen.style.display = 'flex';
-                loginPassword.value = '';
-                loginError.classList.remove('show');
-                showToast('👋 تم تسجيل الخروج', 'success');
-            }
-
-            // ============================================================
-            // 8. ENTER KEY
-            // ============================================================
-            loginPassword.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter') login();
+            // ===== إضافة مستمعات لأزرار الحذف =====
+            document.querySelectorAll('.btn-delete-row').forEach((btn) => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const docId = this.dataset.id;
+                    deleteDocument(docId);
+                });
             });
+        }
 
-            // ============================================================
-            // 9. EVENT LISTENERS
-            // ============================================================
-            loginBtn.addEventListener('click', login);
-            logoutBtn.addEventListener('click', logout);
-            exportBtn.addEventListener('click', exportExcel);
+        // ============================================================
+        // 6. EXPORT EXCEL
+        // ============================================================
+        function exportExcel() {
+            if (currentData.length === 0) {
+                showToast('❌ لا توجد بيانات لتصديرها', 'error');
+                return;
+            }
 
-            // ============================================================
-            // 10. CHECK IF ALREADY LOGGED IN (session)
-            // ============================================================
-            // نتحقق من وجود جلسة نشطة عبر sessionStorage
-            if (sessionStorage.getItem('admin_logged_in') === 'true') {
-                // نجاح تلقائي
+            try {
+                const data = currentData.map((r, index) => ({
+                    '#': index + 1,
+                    'الاسم بالكامل': r.fullName || '',
+                    'الهاتف الأساسي': r.phone || '',
+                    'واتساب': r.phone2 || '',
+                    'البريد الإلكتروني': r.email || '',
+                    'محل الإقامة': r.residence || '',
+                    'الاهتمامات': r.interests || '',
+                    'يوم الحضور': r.day || 'لم يقرر',
+                    'تاريخ التسجيل': r.timestamp || '',
+                }));
+
+                const wb = XLSX.utils.book_new();
+                const ws = XLSX.utils.json_to_sheet(data);
+                ws['!cols'] = [
+                    { wch: 6 }, { wch: 22 }, { wch: 18 }, { wch: 18 },
+                    { wch: 28 }, { wch: 18 }, { wch: 35 }, { wch: 16 }, { wch: 24 }
+                ];
+                XLSX.utils.book_append_sheet(wb, ws, 'المسجلين');
+                const fileName = `EXPO_Registrations_${new Date().toLocaleDateString('ar-EG')}.xlsx`;
+                XLSX.writeFile(wb, fileName);
+                showToast(`✅ تم تحميل ${currentData.length} سجل بنجاح`, 'success');
+            } catch (err) {
+                console.error(err);
+                showToast('❌ حدث خطأ أثناء تصدير البيانات', 'error');
+            }
+        }
+
+        // ============================================================
+        // 7. AUTHENTICATION
+        // ============================================================
+        function login() {
+            const password = loginPassword.value.trim();
+            if (password === ADMIN_PASSWORD) {
+                loginError.classList.remove('show');
+                sessionStorage.setItem(STORAGE_KEY, 'true');
                 loginScreen.style.display = 'none';
                 dashboard.style.display = 'block';
                 renderDashboard();
+                showToast('✅ مرحباً بك في لوحة التحكم', 'success');
+            } else {
+                loginError.classList.add('show');
+                loginPassword.value = '';
+                loginPassword.focus();
             }
+        }
 
-            // حفظ حالة الدخول عند تسجيل الدخول
-            const originalLogin = login;
-            login = function() {
-                const password = loginPassword.value.trim();
-                if (password === ADMIN_PASSWORD) {
-                    sessionStorage.setItem('admin_logged_in', 'true');
-                    originalLogin();
-                } else {
-                    loginError.classList.add('show');
-                    loginPassword.value = '';
-                    loginPassword.focus();
-                }
-            };
+        function logout() {
+            sessionStorage.removeItem(STORAGE_KEY);
+            if (unsubscribe) {
+                unsubscribe();
+                unsubscribe = null;
+            }
+            dashboard.style.display = 'none';
+            loginScreen.style.display = 'flex';
+            loginPassword.value = '';
+            loginError.classList.remove('show');
+            showToast('👋 تم تسجيل الخروج', 'success');
+        }
 
-            // مسح الجلسة عند الخروج
-            const originalLogout = logout;
-            logout = function() {
-                sessionStorage.removeItem('admin_logged_in');
-                originalLogout();
-            };
+        // ============================================================
+        // 8. EVENT LISTENERS
+        // ============================================================
+        loginBtn.addEventListener('click', login);
+        loginPassword.addEventListener('keydown', (e) => { if (e.key === 'Enter') login(); });
+        logoutBtn.addEventListener('click', logout);
+        exportBtn.addEventListener('click', exportExcel);
+        deleteAllBtn.addEventListener('click', deleteAllDocuments);
 
-            // إعادة ربط الأحداث بعد التعديل
-            loginBtn.removeEventListener('click', login);
-            loginBtn.addEventListener('click', login);
-            logoutBtn.removeEventListener('click', logout);
-            logoutBtn.addEventListener('click', logout);
+        // ============================================================
+        // 9. AUTO-LOGIN CHECK
+        // ============================================================
+        if (sessionStorage.getItem(STORAGE_KEY) === 'true') {
+            loginScreen.style.display = 'none';
+            dashboard.style.display = 'block';
+            renderDashboard();
+        }
 
-            // ============================================================
-            // 11. استماع لتحديثات البيانات من الصفحة الأخرى (إذا كانت مفتوحة)
-            // ============================================================
-            window.addEventListener('storage', function(e) {
-                if (e.key === STORAGE_KEY) {
-                    // إذا تم تحديث البيانات من نافذة أخرى، نعيد التحميل
-                    renderDashboard();
-                }
-            });
-
-            // ============================================================
-            // 12. عرض النسخة الحالية من البيانات
-            // ============================================================
-            console.log('✅ Admin Dashboard ready');
-            console.log(`📊 عدد المسجلين: ${getRegistrations().length}`);
-
-            // عرض البيانات في الكونسول لسهولة التصحيح
-            console.log('📋 البيانات:', getRegistrations());
-
-        })();
+        console.log('✅ Admin Dashboard ready with Firebase Firestore');
+        console.log('📊 سيتم عرض البيانات فور توفرها.');
     </script>
 
 </body>
