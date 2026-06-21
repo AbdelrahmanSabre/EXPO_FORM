@@ -1340,7 +1340,7 @@
     <div class="expo-top-bar">
         <span><i class="fas fa-map-marker-alt"></i> فندق توليب أسوان</span>
         <span class="sep">|</span>
-        <span><i class="fas fa-calendar-alt"></i> 15 - 16 يوليو</span>
+        <span><i class="fas fa-calendar-alt"></i> 16 – 17 يوليو</span>
         <span class="sep">|</span>
         <span><i class="fas fa-ticket-alt"></i> الحضور مجاني</span>
     </div>
@@ -1454,22 +1454,22 @@
                     لقطات من Edition 1 – لحظات من الزحام والنجاح
                 </p>
                 <div style="margin-top:20px; background:rgba(255,107,26,0.06); padding:16px 24px; border-radius:12px; border-right:4px solid var(--expo-orange);">
-                    <span style="font-weight:800; font-size:1.4rem; color:var(--expo-orange);">+١٠٠٠</span>
+                    <span style="font-weight:800; font-size:1.4rem; color:var(--expo-orange);">+500</span>
                     <span style="color:#5a5550; font-weight:600; margin-right:8px;">زائر في النسخة السابقة</span>
                 </div>
             </div>
 
             <div class="atmosphere-gallery">
                 <div class="gallery-item">
-                    <img src="People0.png" alt="زحام المعرض - Edition 1" loading="lazy" />
+                    <img src="EXPO_People.png" alt="زحام المعرض - Edition 1" loading="lazy" />
                     <span class="gallery-label">Edition 1 · الحضور</span>
                 </div>
                 <div class="gallery-item">
-                    <img src="contract1.png" alt="توقيع العقود في المعرض" loading="lazy" />
+                    <img src="Contract (2).jpg" alt="توقيع العقود في المعرض" loading="lazy" />
                     <span class="gallery-label">توقيع العقود</span>
                 </div>
                 <div class="gallery-item">
-                    <img src="people44.png" alt="اجتماعات المستثمرين" loading="lazy" />
+                    <img src="Investments.jpg" alt="اجتماعات المستثمرين" loading="lazy" />
                     <span class="gallery-label">اجتماعات المستثمرين</span>
                 </div>
             </div>
@@ -1673,9 +1673,29 @@
     </a>
 
     <!-- ============================================================
-    SCRIPTS
+    FIREBASE + SCRIPTS
     ============================================================ -->
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
     <script>
+        // ============================================================
+        // 0. FIREBASE CONFIG - ⚡ استبدل البيانات التالية ببيانات مشروعك
+        // ============================================================
+        const firebaseConfig = {
+    apiKey: "AIzaSyD3F5eRgetzkp8rzsFrwyDZZJsNuxQxqeE",
+    authDomain: "pharaohs-expo-registration.firebaseapp.com",
+    projectId: "pharaohs-expo-registration",
+    storageBucket: "pharaohs-expo-registration.firebasestorage.app",
+    messagingSenderId: "821875473528",
+    appId: "1:821875473528:web:1a065f810386f6448ac18d"
+};
+
+        // ===== تهيئة Firebase =====
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
         // ============================================================
         // 1. COUNTDOWN TIMER
         // ============================================================
@@ -1703,7 +1723,7 @@
         })();
 
         // ============================================================
-        // 2. FORM HANDLING (NO Google Sheets – just frontend validation)
+        // 2. FORM HANDLING – WRITE TO FIRESTORE
         // ============================================================
         const form = document.getElementById('registrationForm');
         const formWrapper = document.getElementById('formWrapper');
@@ -1809,29 +1829,28 @@
                 residence: residence.value,
                 interests: interests.join('، '),
                 day: dayVal,
-                timestamp: new Date().toLocaleString('ar-EG', { timeZone: 'Africa/Cairo' })
+                timestamp: new Date().toLocaleString('ar-EG', { timeZone: 'Africa/Cairo' }),
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
             };
 
             // ===== تعطيل الزر أثناء المعالجة =====
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التسجيل...';
 
-            // ===== حفظ البيانات في localStorage =====
-            try {
-                let registrations = JSON.parse(localStorage.getItem('expo_registrations') || '[]');
-                registrations.push(formData);
-                localStorage.setItem('expo_registrations', JSON.stringify(registrations));
-            } catch (e) {
-                console.warn('Could not save to localStorage:', e);
-            }
-
-            // ===== محاكاة إرسال ناجح =====
-            setTimeout(() => {
-                showSuccess();
-                console.log('✅ تم التسجيل بنجاح:', formData);
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> احجز مقعدي الآن';
-            }, 1200);
+            // ===== كتابة البيانات إلى Firestore =====
+            db.collection('registrations').add(formData)
+                .then(() => {
+                    showSuccess();
+                    console.log('✅ تم التسجيل بنجاح في Firestore');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> احجز مقعدي الآن';
+                })
+                .catch((error) => {
+                    console.error('❌ خطأ في الكتابة:', error);
+                    showError();
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> احجز مقعدي الآن';
+                });
         });
 
         // ===== تحسين واجهة المستخدم =====
@@ -1854,7 +1873,7 @@
             });
         });
 
-        console.log('✅ EXPO Registration Form ready (with localStorage)');
+        console.log('✅ EXPO Registration Form ready with Firebase Firestore');
     </script>
 
 </body>
