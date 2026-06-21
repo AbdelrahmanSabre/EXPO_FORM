@@ -4,7 +4,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
     <title>Admin · لوحة تحكم EXPO</title>
-    <link rel="icon" type="image/png" href="Asset 5.png">
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
@@ -14,6 +13,7 @@
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <style>
         /* ===== ADMIN DASHBOARD STYLES ===== */
         * {
@@ -36,6 +36,10 @@
             --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             --danger: #dc2626;
             --danger-hover: #b91c1c;
+            --google-blue: #4285F4;
+            --google-red: #EA4335;
+            --google-yellow: #FBBC05;
+            --google-green: #34A853;
         }
 
         body {
@@ -70,10 +74,10 @@
             width: 100%;
             box-shadow: 0 20px 60px rgba(0, 0, 0, .15);
             border: 2px solid var(--expo-orange);
+            text-align: center;
         }
 
         .login-box .logo {
-            text-align: center;
             margin-bottom: 32px;
         }
 
@@ -93,53 +97,41 @@
             margin-top: 4px;
         }
 
-        .login-box .form-group {
-            margin-bottom: 20px;
-        }
-
-        .login-box .form-group label {
-            display: block;
-            font-weight: 700;
-            font-size: 0.9rem;
-            color: var(--expo-black-soft);
-            margin-bottom: 6px;
-        }
-
-        .login-box .form-control {
+        .login-box .btn-google {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
             width: 100%;
-            padding: 14px 16px;
-            border: 2px solid var(--expo-gray-light);
+            padding: 14px 20px;
+            border: 1px solid #dadce0;
             border-radius: var(--radius-sm);
+            background: var(--expo-white);
             font-size: 1rem;
+            font-weight: 600;
             font-family: 'Cairo', sans-serif;
-            background: #faf6f0;
-            transition: var(--transition);
-        }
-
-        .login-box .form-control:focus {
-            outline: none;
-            border-color: var(--expo-orange);
-            box-shadow: 0 0 0 4px rgba(255, 107, 26, 0.12);
-        }
-
-        .login-box .btn {
-            width: 100%;
-            padding: 16px;
-            border: none;
-            border-radius: var(--radius-sm);
-            font-size: 1.05rem;
-            font-weight: 800;
-            font-family: 'Cairo', sans-serif;
-            background: linear-gradient(135deg, var(--expo-orange), var(--expo-orange-dark));
-            color: var(--expo-white);
+            color: #3c4043;
             cursor: pointer;
             transition: var(--transition);
-            box-shadow: 0 8px 25px rgba(255, 107, 26, 0.3);
+            margin-top: 16px;
         }
 
-        .login-box .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 35px rgba(255, 107, 26, 0.4);
+        .login-box .btn-google:hover {
+            background: #f8f9fa;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .login-box .btn-google i {
+            font-size: 1.5rem;
+            background: conic-gradient(from 0deg, var(--google-blue) 0%, var(--google-red) 25%, var(--google-yellow) 50%, var(--google-green) 75%, var(--google-blue) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .login-box .loading-text {
+            color: var(--expo-gray);
+            font-size: 0.9rem;
+            margin-top: 12px;
         }
 
         .login-box .error-msg {
@@ -148,9 +140,8 @@
             padding: 10px 16px;
             border-radius: var(--radius-sm);
             font-size: 0.9rem;
-            margin-top: 12px;
+            margin-top: 16px;
             display: none;
-            text-align: center;
         }
 
         .login-box .error-msg.show {
@@ -366,7 +357,6 @@
             color: var(--expo-gray);
         }
 
-        /* ===== DELETE BUTTON ===== */
         .btn-delete-row {
             background: none;
             border: none;
@@ -381,10 +371,6 @@
         .btn-delete-row:hover {
             background: #fee2e2;
             transform: scale(1.1);
-        }
-
-        .btn-delete-row i {
-            pointer-events: none;
         }
 
         /* ===== Back to main ===== */
@@ -486,7 +472,6 @@
             }
         }
 
-        /* ===== ADMIN GHOST (optional tiny gear) ===== */
         .admin-ghost {
             position: fixed;
             bottom: 12px;
@@ -533,12 +518,11 @@
                 <h1>PHARAOHS <span>ADMIN</span></h1>
                 <p>لوحة تحكم EXPO Edition 2</p>
             </div>
-            <div class="form-group">
-                <label for="adminPassword">كلمة المرور</label>
-                <input type="password" id="adminPassword" class="form-control" placeholder="أدخل كلمة المرور" />
-            </div>
-            <button class="btn" id="loginBtn"><i class="fas fa-lock"></i> دخول</button>
-            <div class="error-msg" id="loginError">كلمة المرور غير صحيحة. حاول مرة أخرى.</div>
+            <div id="loginStatus" class="loading-text">جاري التحقق من الجلسة...</div>
+            <button class="btn-google" id="googleLoginBtn" style="display:none;">
+                <i class="fab fa-google"></i> تسجيل الدخول بحساب Google
+            </button>
+            <div class="error-msg" id="loginError">حدث خطأ أثناء تسجيل الدخول. حاول مرة أخرى.</div>
         </div>
     </div>
 
@@ -621,7 +605,7 @@
         </div>
     </div>
 
-    <!-- ===== ADMIN GHOST (optional tiny gear, just for fun) ===== -->
+    <!-- ===== ADMIN GHOST ===== -->
     <a href="admin.html" class="admin-ghost" title="Admin Panel">
         <i class="fas fa-cog"></i>
         <span>admin</span>
@@ -629,7 +613,7 @@
 
     <script>
         // ============================================================
-        // 0. FIREBASE CONFIG
+        // 0. FIREBASE CONFIG - نفس بيانات المشروع
         // ============================================================
         const firebaseConfig = {
             apiKey: "AIzaSyD3F5eRgetzkp8rzsFrwyDZZJsNuxQxqeE",
@@ -643,23 +627,15 @@
         // ===== تهيئة Firebase =====
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
+        const auth = firebase.auth();
 
         // ============================================================
-        // 1. CONFIG & GLOBALS
-        // ============================================================
-        const ADMIN_PASSWORD = 'admin123'; // يمكنك تغييرها
-        const STORAGE_KEY = 'admin_logged_in';
-
-        let currentData = [];
-        let unsubscribe = null;
-
-        // ============================================================
-        // 2. DOM REFS
+        // 1. DOM REFS
         // ============================================================
         const loginScreen = document.getElementById('loginScreen');
         const dashboard = document.getElementById('dashboard');
-        const loginBtn = document.getElementById('loginBtn');
-        const loginPassword = document.getElementById('adminPassword');
+        const loginStatus = document.getElementById('loginStatus');
+        const googleLoginBtn = document.getElementById('googleLoginBtn');
         const loginError = document.getElementById('loginError');
         const logoutBtn = document.getElementById('logoutBtn');
         const tableBody = document.getElementById('tableBody');
@@ -672,8 +648,11 @@
         const day17Count = document.getElementById('day17Count');
         const undecidedCount = document.getElementById('undecidedCount');
 
+        let currentData = [];
+        let unsubscribe = null;
+
         // ============================================================
-        // 3. TOAST
+        // 2. TOAST
         // ============================================================
         function showToast(message, type = 'success') {
             toast.textContent = message;
@@ -686,11 +665,10 @@
         }
 
         // ============================================================
-        // 4. DELETE FUNCTIONS
+        // 3. DELETE FUNCTIONS
         // ============================================================
         async function deleteDocument(docId) {
             if (!confirm('⚠️ هل أنت متأكد من حذف هذا السجل؟')) return;
-
             try {
                 await db.collection('registrations').doc(docId).delete();
                 showToast('✅ تم حذف السجل بنجاح', 'success');
@@ -705,7 +683,6 @@
                 showToast('⚠️ لا توجد بيانات لحذفها', 'warning');
                 return;
             }
-
             if (!confirm(`⚠️ هل أنت متأكد من حذف جميع السجلات (${currentData.length} سجل)؟ هذا الإجراء لا يمكن التراجع عنه!`)) return;
 
             try {
@@ -723,7 +700,7 @@
         }
 
         // ============================================================
-        // 5. RENDER DASHBOARD
+        // 4. RENDER DASHBOARD
         // ============================================================
         function renderDashboard() {
             if (unsubscribe) {
@@ -746,7 +723,6 @@
         }
 
         function displayData(registrations) {
-            // إحصائيات
             const total = registrations.length;
             const day16 = registrations.filter(r => r.day === '16 يوليو').length;
             const day17 = registrations.filter(r => r.day === '17 يوليو').length;
@@ -757,7 +733,6 @@
             day17Count.textContent = day17;
             undecidedCount.textContent = undecided;
 
-            // جدول
             if (registrations.length === 0) {
                 tableBody.innerHTML = `
                     <tr class="empty-row">
@@ -770,26 +745,20 @@
                 return;
             }
 
-            const sorted = registrations;
-
-            tableBody.innerHTML = sorted.map((r, index) => {
+            tableBody.innerHTML = registrations.map((r, index) => {
                 const dayBadge = r.day === 'لم أقرر بعد' || !r.day ?
                     `<span class="badge-day undecided">${r.day || 'لم يقرر'}</span>` :
                     `<span class="badge-day">${r.day}</span>`;
-
-                const interests = r.interests || '-';
-                const email = r.email || '-';
-                const phone2 = r.phone2 || '-';
 
                 return `
                     <tr>
                         <td>${index + 1}</td>
                         <td><strong>${r.fullName || 'غير معروف'}</strong></td>
                         <td>${r.phone || '-'}</td>
-                        <td>${phone2}</td>
-                        <td>${email}</td>
+                        <td>${r.phone2 || '-'}</td>
+                        <td>${r.email || '-'}</td>
                         <td>${r.residence || '-'}</td>
-                        <td style="font-size:0.8rem; max-width:150px;">${interests}</td>
+                        <td style="font-size:0.8rem; max-width:150px;">${r.interests || '-'}</td>
                         <td>${dayBadge}</td>
                         <td style="font-size:0.8rem;">${r.timestamp || '-'}</td>
                         <td>
@@ -801,7 +770,6 @@
                 `;
             }).join('');
 
-            // ===== إضافة مستمعات لأزرار الحذف =====
             document.querySelectorAll('.btn-delete-row').forEach((btn) => {
                 btn.addEventListener('click', function(e) {
                     e.stopPropagation();
@@ -812,14 +780,13 @@
         }
 
         // ============================================================
-        // 6. EXPORT EXCEL
+        // 5. EXPORT EXCEL
         // ============================================================
         function exportExcel() {
             if (currentData.length === 0) {
                 showToast('❌ لا توجد بيانات لتصديرها', 'error');
                 return;
             }
-
             try {
                 const data = currentData.map((r, index) => ({
                     '#': index + 1,
@@ -850,58 +817,73 @@
         }
 
         // ============================================================
-        // 7. AUTHENTICATION
+        // 6. AUTHENTICATION – GOOGLE SIGN IN
         // ============================================================
-        function login() {
-            const password = loginPassword.value.trim();
-            if (password === ADMIN_PASSWORD) {
-                loginError.classList.remove('show');
-                sessionStorage.setItem(STORAGE_KEY, 'true');
-                loginScreen.style.display = 'none';
-                dashboard.style.display = 'block';
-                renderDashboard();
-                showToast('✅ مرحباً بك في لوحة التحكم', 'success');
-            } else {
-                loginError.classList.add('show');
-                loginPassword.value = '';
-                loginPassword.focus();
-            }
-        }
-
-        function logout() {
-            sessionStorage.removeItem(STORAGE_KEY);
-            if (unsubscribe) {
-                unsubscribe();
-                unsubscribe = null;
-            }
+        function showLoginScreen() {
             dashboard.style.display = 'none';
             loginScreen.style.display = 'flex';
-            loginPassword.value = '';
+            loginStatus.textContent = 'تسجيل الدخول بحساب Google';
+            googleLoginBtn.style.display = 'block';
             loginError.classList.remove('show');
-            showToast('👋 تم تسجيل الخروج', 'success');
         }
 
+        function showDashboard() {
+            loginScreen.style.display = 'none';
+            dashboard.style.display = 'block';
+            renderDashboard();
+            showToast('✅ مرحباً بك في لوحة التحكم', 'success');
+        }
+
+        // مراقبة حالة المصادقة
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                // مستخدم مسجل دخوله
+                showDashboard();
+            } else {
+                // غير مسجل
+                showLoginScreen();
+            }
+        });
+
+        // زر تسجيل الدخول
+        googleLoginBtn.addEventListener('click', async () => {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            provider.setCustomParameters({ prompt: 'select_account' });
+            try {
+                await auth.signInWithPopup(provider);
+                // سيتم التعامل مع النجاح عبر onAuthStateChanged
+            } catch (error) {
+                console.error('❌ خطأ في تسجيل الدخول:', error);
+                loginError.textContent = error.message || 'حدث خطأ أثناء تسجيل الدخول. حاول مرة أخرى.';
+                loginError.classList.add('show');
+            }
+        });
+
+        // تسجيل الخروج
+        logoutBtn.addEventListener('click', async () => {
+            try {
+                await auth.signOut();
+                if (unsubscribe) {
+                    unsubscribe();
+                    unsubscribe = null;
+                }
+                showToast('👋 تم تسجيل الخروج', 'success');
+            } catch (error) {
+                console.error('❌ خطأ في تسجيل الخروج:', error);
+                showToast('❌ حدث خطأ أثناء تسجيل الخروج', 'error');
+            }
+        });
+
         // ============================================================
-        // 8. EVENT LISTENERS
+        // 7. OTHER EVENT LISTENERS
         // ============================================================
-        loginBtn.addEventListener('click', login);
-        loginPassword.addEventListener('keydown', (e) => { if (e.key === 'Enter') login(); });
-        logoutBtn.addEventListener('click', logout);
         exportBtn.addEventListener('click', exportExcel);
         deleteAllBtn.addEventListener('click', deleteAllDocuments);
 
         // ============================================================
-        // 9. AUTO-LOGIN CHECK
+        // 8. INIT
         // ============================================================
-        if (sessionStorage.getItem(STORAGE_KEY) === 'true') {
-            loginScreen.style.display = 'none';
-            dashboard.style.display = 'block';
-            renderDashboard();
-        }
-
-        console.log('✅ Admin Dashboard ready with Firebase Firestore');
-        console.log('📊 سيتم عرض البيانات فور توفرها.');
+        console.log('✅ Admin Dashboard ready with Firebase Auth (Google)');
     </script>
-
 </body>
 </html>
