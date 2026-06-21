@@ -166,27 +166,20 @@
             display: block;
         }
 
-        .login-box .loading-text {
-            color: var(--expo-gray);
-            font-size: 0.9rem;
-            margin-top: 12px;
-        }
-
-        .login-box .signup-link {
-            margin-top: 16px;
+        .login-box .admin-notice {
+            background: #fff3cd;
+            color: #856404;
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
             font-size: 0.85rem;
-            color: var(--expo-gray);
+            margin-top: 16px;
+            border-right: 4px solid #ffc107;
+            text-align: right;
         }
 
-        .login-box .signup-link a {
-            color: var(--expo-orange);
-            font-weight: 700;
-            cursor: pointer;
-            text-decoration: none;
-        }
-
-        .login-box .signup-link a:hover {
-            text-decoration: underline;
+        .login-box .admin-notice i {
+            margin-left: 8px;
+            color: #ffc107;
         }
 
         /* ===== DASHBOARD ===== */
@@ -560,7 +553,7 @@
                 <p>لوحة تحكم EXPO Edition 2</p>
             </div>
 
-            <!-- نموذج تسجيل الدخول -->
+            <!-- نموذج تسجيل الدخول (بدون زر إنشاء حساب) -->
             <div id="loginForm">
                 <div class="form-group">
                     <label for="adminEmail">البريد الإلكتروني</label>
@@ -572,25 +565,12 @@
                 </div>
                 <button class="btn-login" id="loginBtn"><i class="fas fa-lock"></i> تسجيل الدخول</button>
                 <div class="error-msg" id="loginError">البريد الإلكتروني أو كلمة المرور غير صحيحة.</div>
-                <div class="signup-link" id="signupLink">
-                    ليس لديك حساب؟ <a id="showSignupBtn">إنشاء حساب جديد</a>
-                </div>
-            </div>
-
-            <!-- نموذج إنشاء حساب (مخفي) -->
-            <div id="signupForm" style="display:none;">
-                <div class="form-group">
-                    <label for="signupEmail">البريد الإلكتروني</label>
-                    <input type="email" id="signupEmail" class="form-control" placeholder="admin@company.com" />
-                </div>
-                <div class="form-group">
-                    <label for="signupPassword">كلمة المرور (6 أحرف على الأقل)</label>
-                    <input type="password" id="signupPassword" class="form-control" placeholder="••••••••" />
-                </div>
-                <button class="btn-login" id="signupBtn" style="background: #22c55e;"><i class="fas fa-user-plus"></i> إنشاء الحساب</button>
-                <div class="error-msg" id="signupError" style="display:none;"></div>
-                <div class="signup-link">
-                    لديك حساب بالفعل؟ <a id="showLoginBtn">تسجيل الدخول</a>
+                
+                <!-- رسالة إدارية: فقط المستخدمين المصرح لهم -->
+                <div class="admin-notice">
+                    <i class="fas fa-info-circle"></i>
+                    فقط المستخدمين المصرح لهم يمكنهم الدخول. 
+                    للتواصل مع الإدارة لإنشاء حساب جديد.
                 </div>
             </div>
 
@@ -706,20 +686,10 @@
         // ============================================================
         const loginScreen = document.getElementById('loginScreen');
         const dashboard = document.getElementById('dashboard');
-        const loginForm = document.getElementById('loginForm');
-        const signupForm = document.getElementById('signupForm');
-        const signupLink = document.getElementById('signupLink');
         const loginBtn = document.getElementById('loginBtn');
-        const signupBtn = document.getElementById('signupBtn');
-        const showSignupBtn = document.getElementById('showSignupBtn');
-        const showLoginBtn = document.getElementById('showLoginBtn');
         const adminEmail = document.getElementById('adminEmail');
         const adminPassword = document.getElementById('adminPassword');
-        const signupEmail = document.getElementById('signupEmail');
-        const signupPassword = document.getElementById('signupPassword');
         const loginError = document.getElementById('loginError');
-        const signupError = document.getElementById('signupError');
-        const loginStatus = document.getElementById('loginStatus');
         const logoutBtn = document.getElementById('logoutBtn');
         const tableBody = document.getElementById('tableBody');
         const exportBtn = document.getElementById('exportExcelBtn');
@@ -900,25 +870,8 @@
         }
 
         // ============================================================
-        // 6. AUTHENTICATION – EMAIL & PASSWORD
+        // 6. AUTHENTICATION – EMAIL & PASSWORD (آمن)
         // ============================================================
-
-        // تبديل بين نموذج تسجيل الدخول ونموذج إنشاء الحساب
-        showSignupBtn.addEventListener('click', () => {
-            loginForm.style.display = 'none';
-            signupForm.style.display = 'block';
-            signupLink.style.display = 'none';
-            loginError.classList.remove('show');
-            signupError.classList.remove('show');
-        });
-
-        showLoginBtn.addEventListener('click', () => {
-            loginForm.style.display = 'block';
-            signupForm.style.display = 'none';
-            signupLink.style.display = 'block';
-            loginError.classList.remove('show');
-            signupError.classList.remove('show');
-        });
 
         // دالة عرض لوحة التحكم
         function showDashboard() {
@@ -932,17 +885,14 @@
         function showLoginScreen(message) {
             dashboard.style.display = 'none';
             loginScreen.style.display = 'flex';
-            loginStatus.style.display = 'none';
-            loginForm.style.display = 'block';
-            signupForm.style.display = 'none';
-            signupLink.style.display = 'block';
+            loginError.classList.remove('show');
             if (message) {
                 loginError.textContent = message;
                 loginError.classList.add('show');
             }
         }
 
-        // تسجيل الدخول
+        // تسجيل الدخول (فقط المستخدمين الموجودين في Firebase Auth)
         loginBtn.addEventListener('click', async () => {
             const email = adminEmail.value.trim();
             const password = adminPassword.value.trim();
@@ -963,7 +913,7 @@
             } catch (error) {
                 console.error('❌ خطأ في تسجيل الدخول:', error);
                 let msg = 'البريد الإلكتروني أو كلمة المرور غير صحيحة.';
-                if (error.code === 'auth/user-not-found') msg = 'لم يتم العثور على هذا البريد الإلكتروني.';
+                if (error.code === 'auth/user-not-found') msg = '⚠️ هذا البريد الإلكتروني غير مصرح به. تواصل مع الإدارة.';
                 if (error.code === 'auth/wrong-password') msg = 'كلمة المرور غير صحيحة.';
                 if (error.code === 'auth/too-many-requests') msg = 'تم حظر الحساب مؤقتاً بسبب محاولات كثيرة. حاول لاحقاً.';
                 loginError.textContent = msg;
@@ -973,57 +923,9 @@
             }
         });
 
-        // إنشاء حساب جديد
-        signupBtn.addEventListener('click', async () => {
-            const email = signupEmail.value.trim();
-            const password = signupPassword.value.trim();
-
-            if (!email || !password) {
-                signupError.textContent = 'يرجى إدخال البريد الإلكتروني وكلمة المرور.';
-                signupError.style.display = 'block';
-                return;
-            }
-            if (password.length < 6) {
-                signupError.textContent = 'كلمة المرور يجب أن تكون 6 أحرف على الأقل.';
-                signupError.style.display = 'block';
-                return;
-            }
-
-            signupBtn.disabled = true;
-            signupBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري إنشاء الحساب...';
-            signupError.style.display = 'none';
-
-            try {
-                await auth.createUserWithEmailAndPassword(email, password);
-                showToast('✅ تم إنشاء الحساب بنجاح! يمكنك الآن تسجيل الدخول.', 'success');
-                // العودة لنموذج تسجيل الدخول
-                loginForm.style.display = 'block';
-                signupForm.style.display = 'none';
-                signupLink.style.display = 'block';
-                adminEmail.value = email;
-                adminPassword.value = '';
-                signupBtn.disabled = false;
-                signupBtn.innerHTML = '<i class="fas fa-user-plus"></i> إنشاء الحساب';
-            } catch (error) {
-                console.error('❌ خطأ في إنشاء الحساب:', error);
-                let msg = 'حدث خطأ أثناء إنشاء الحساب.';
-                if (error.code === 'auth/email-already-in-use') msg = 'هذا البريد الإلكتروني مستخدم بالفعل.';
-                if (error.code === 'auth/invalid-email') msg = 'البريد الإلكتروني غير صالح.';
-                if (error.code === 'auth/weak-password') msg = 'كلمة المرور ضعيفة جداً. استخدم 6 أحرف على الأقل.';
-                signupError.textContent = msg;
-                signupError.style.display = 'block';
-                signupBtn.disabled = false;
-                signupBtn.innerHTML = '<i class="fas fa-user-plus"></i> إنشاء الحساب';
-            }
-        });
-
         // الضغط على Enter في حقول تسجيل الدخول
         adminPassword.addEventListener('keydown', (e) => { if (e.key === 'Enter') loginBtn.click(); });
         adminEmail.addEventListener('keydown', (e) => { if (e.key === 'Enter') loginBtn.click(); });
-
-        // الضغط على Enter في حقول إنشاء الحساب
-        signupPassword.addEventListener('keydown', (e) => { if (e.key === 'Enter') signupBtn.click(); });
-        signupEmail.addEventListener('keydown', (e) => { if (e.key === 'Enter') signupBtn.click(); });
 
         // مراقبة حالة المصادقة
         auth.onAuthStateChanged((user) => {
@@ -1060,7 +962,8 @@
         // ============================================================
         // 8. INIT
         // ============================================================
-        console.log('✅ Admin Dashboard ready with Firebase Auth (Email/Password)');
+        console.log('✅ Admin Dashboard ready with Firebase Auth (Email/Password) - آمن');
+        console.log('🔒 فقط المستخدمين المصرح لهم يمكنهم الدخول');
     </script>
 </body>
 </html>
